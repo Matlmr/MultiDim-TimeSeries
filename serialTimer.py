@@ -15,14 +15,14 @@ class SerialTimer():
                  aoi_box=[15.00, 48.00, 15.01, 48.01],
                  raster_dir='/home/volume2/Austria/Timeseries/',
                  polygon_file='/home/volume2/Austria/GroundTruth/invekos_schlaege_polygon.shp',
-                 out_dir='/home/mlamarre/Documents/FieldTimeSeries',
+                 out_file='/home/mlamarre/Documents/FieldTimeSeries',
                  time_stamps=np.arange(1, 61),
                  dimensions=['BS.VH', 'BS.VV'],
                  quick_check=True):
 
         self.raster_dir = raster_dir
         self.polygon_file = polygon_file
-        self.out_dir = out_dir
+        self.out_file = out_file
         if aoi_file:
             with open(aoi_file, mode='r') as file:
                 csv_reader = csv.DictReader(file)
@@ -107,6 +107,10 @@ class SerialTimer():
         # Drop indivuals columns
         self.polys_OI = self.polys_OI.drop(columns=columns_series)
 
+    def saveCSV(self):
+        print('Writing DataFrame to CSV...')
+        self.polys_OI.to_csv(self.out_file)
+
     def routine(self):
 
         # Read all the polygons
@@ -129,3 +133,6 @@ class SerialTimer():
 
             # Merge the columns into a time series
             self.mergeColumns(dimension=d)
+
+        # Save the dataframe
+        self.saveCSV()
