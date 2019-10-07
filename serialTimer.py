@@ -20,7 +20,7 @@ class SerialTimer():
                  time_stamps=np.arange(1, 61),
                  dimensions=['BS.VH', 'BS.VV'],
                  quick_check=True):
-
+        
         self.raster_dir = raster_dir
         self.polygon_file = polygon_file
         self.out_file = out_file
@@ -29,7 +29,6 @@ class SerialTimer():
                 csv_reader = csv.DictReader(file)
                 for row in csv_reader:
                     self.aoi = loads(row['WKT'])
-                    # self.aoi = Polygon(row['WKT'])
                     break
         else:
             self.aoi = box(minx=aoi_box[0], miny=aoi_box[1], maxx=aoi_box[2], maxy=aoi_box[3])
@@ -37,7 +36,7 @@ class SerialTimer():
         self.dimensions = dimensions
         self.quick_check = quick_check
         self.scanned = False
-
+                
     def readPolygons(self):
         if os.path.isfile(self.polygon_file):
             print('Reading shape file...')
@@ -60,17 +59,14 @@ class SerialTimer():
             print('ERROR: wrong raster file')
 
     def selectPolygons(self):
-        # Transform AoI to GeoDataFrame to change CRS and then back to Polygon to use within function
+        # Transform AoI to GeoDataFrame to change CRS and then back to Polygon to use within() function
         print('Original coordinates: {}'.format(self.aoi.bounds))
         AOI = gpd.GeoDataFrame({'geometry': self.aoi}, index=[0], crs=self.rast_crs)
         AOI = AOI.to_crs(self.poly_crs)
-        AOI = box(minx=AOI.bounds.loc[0]['minx'],
-                  miny=AOI.bounds.loc[0]['miny'],
-                  maxx=AOI.bounds.loc[0]['maxx'],
-                  maxy=AOI.bounds.loc[0]['maxy'])
+        AOI = Polygon(AOI.geometry[0])
         print('Transformed coordinates: {}'.format(AOI.bounds))
 
-        # Iterate over all the polygons and check if the 1st point is within AOI
+        # Iterate over all the polygons and check they're within AOI
         idxs = []
         for index, row in self.polygons.iterrows():
             if index % 2500 == 0:
@@ -84,6 +80,7 @@ class SerialTimer():
                 for point in row.geometry.exterior.coords:
                     if not Point(point).within(AOI):
                         all_inside = False
+                        break
                 if all_inside:
                     idxs.append(index)
         print('{} fields were selected'.format(len(idxs)))
