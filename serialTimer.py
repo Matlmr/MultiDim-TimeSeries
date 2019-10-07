@@ -4,6 +4,7 @@ import rasterio
 import numpy as np
 import geopandas as gpd
 
+from shapely.wkt import loads
 from rasterstats import zonal_stats
 from shapely.geometry import Point, Polygon, box
 
@@ -27,7 +28,8 @@ class SerialTimer():
             with open(aoi_file, mode='r') as file:
                 csv_reader = csv.DictReader(file)
                 for row in csv_reader:
-                    self.aoi = Polygon(row['WKT'])
+                    self.aoi = loads(row['WKT'])
+                    # self.aoi = Polygon(row['WKT'])
                     break
         else:
             self.aoi = box(minx=aoi_box[0], miny=aoi_box[1], maxx=aoi_box[2], maxy=aoi_box[3])
@@ -80,7 +82,7 @@ class SerialTimer():
             else:
                 all_inside = True
                 for point in row.geometry.exterior.coords:
-                    if not point.within(AOI):
+                    if not Point(point).within(AOI):
                         all_inside = False
                 if all_inside:
                     idxs.append(index)
